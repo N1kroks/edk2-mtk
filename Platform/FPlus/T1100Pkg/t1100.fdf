@@ -129,6 +129,7 @@ READ_LOCK_STATUS   = TRUE
   INF MediaTekPkg/Drivers/RamDiskDxe/RamDiskDxe.inf
   INF MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
   INF MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
+  INF MediaTekPkg/Drivers/WatchDogDxe/WatchDogDxe.inf
 
   #
   # USB Host Support

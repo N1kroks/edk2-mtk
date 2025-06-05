@@ -429,6 +429,9 @@
   # PMIC
   MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
 
+  # Watchdog Kicker
+  MediaTekPkg/Drivers/WatchDogDxe/WatchDogDxe.inf
+
   # USB
   MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf

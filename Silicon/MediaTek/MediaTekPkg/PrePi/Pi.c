@@ -138,9 +138,6 @@ CEntryPoint(
   IN UINTN StackSize
   )
 {
-  // Disable watchdog (FIXME)
-  DisableWDT();
-
   SerialPortInit ();
   
   // Do platform specific initialization here
