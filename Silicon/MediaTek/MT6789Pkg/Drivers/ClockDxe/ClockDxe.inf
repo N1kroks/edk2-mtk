@@ -1,0 +1,26 @@
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = ClockDxe
+  FILE_GUID                      = 5f33f489-354c-4d87-8c2a-b0e89aa94c30
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ClockDxeInitialize
+
+[Sources.common]
+  ClockDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MediaTekPkg/MediaTekPkg.dec
+  MT6789Pkg/MT6789.dec
+
+[LibraryClasses]
+  IoLib
+  DebugLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gMediaTekClockProtocolGuid
+
+[Depex]
+  TRUE

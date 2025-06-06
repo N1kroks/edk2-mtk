@@ -426,6 +426,9 @@
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
   MediaTekPkg/Drivers/RamDiskDxe/RamDiskDxe.inf
 
+  # MSDC
+  MediaTekPkg/Drivers/MsdcDxe/MsdcDxe.inf
+
   # PMIC
   MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
 

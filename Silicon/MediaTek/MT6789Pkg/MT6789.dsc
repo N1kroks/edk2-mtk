@@ -43,9 +43,12 @@
   PlatformPrePiLib|MT6789Pkg/Library/PlatformPrePiLib/PlatformPrePiLib.inf
   MtkGpioImplLib|MT6789Pkg/Library/MtkGpioImplLib/MtkGpioImplLib.inf
   PmicWrapperImplLib|MT6789Pkg/Library/PmicWrapperImplLib/PmicWrapperImplLib.inf
+  MsdcPlatformImplLib|MT6789Pkg/Library/MsdcPlatformImplLib/MsdcPlatformImplLib.inf
   RealTimeClockLib|MediaTekPkg/Library/MT6358RtcLib/MT6358RtcLib.inf
 
 [Components.common]
+  MT6789Pkg/Drivers/ClockDxe/ClockDxe.inf
+  MT6789Pkg/Drivers/MsdcPlatformDxe/MsdcPlatformDxe.inf
   MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {

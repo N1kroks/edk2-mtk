@@ -1,0 +1,32 @@
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = MsdcDxe
+  FILE_GUID                      = 36a039b9-0e4e-4c89-a7b4-520172338126
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MsdcDxeInitialize
+
+[Sources.common]
+  MsdcDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MediaTekPkg/MediaTekPkg.dec
+
+[LibraryClasses]
+  IoLib
+  DebugLib
+  TimerLib
+  MsdcPlatformImplLib
+  UefiDriverEntryPoint
+  BaseMemoryLib
+  MemoryAllocationLib
+  DevicePathLib
+
+[Protocols]
+  gEfiSdMmcPassThruProtocolGuid
+  gMediaTekMsdcPlatformProtocolGuid
+
+[Depex]
+  gMediaTekMsdcPlatformProtocolGuid

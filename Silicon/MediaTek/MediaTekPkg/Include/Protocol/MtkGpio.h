@@ -9,8 +9,7 @@ typedef struct _MTK_GPIO MTK_GPIO;
 // Data Types
 //
 typedef enum {
-  GPIO_MODE_INPUT              = 0,
-  GPIO_MODE_OUTPUT             = 8,
+  GPIO_MODE_MAIN_FUNCTION      = 0,
   GPIO_MODE_SPECIAL_FUNCTION_1 = 1,
   GPIO_MODE_SPECIAL_FUNCTION_2 = 2,
   GPIO_MODE_SPECIAL_FUNCTION_3 = 3,
@@ -24,6 +23,11 @@ typedef enum {
   MTK_GPIO_PULL_UP,
   MTK_GPIO_PULL_DOWN
 } MTK_GPIO_PULL;
+
+typedef enum {
+  MTK_GPIO_DIR_OUTPUT,
+  MTK_GPIO_DIR_INPUT
+} MTK_GPIO_DIR;
 
 typedef struct {
   UINT32 BaseAddr;

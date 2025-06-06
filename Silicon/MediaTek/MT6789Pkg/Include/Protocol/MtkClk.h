@@ -1,0 +1,98 @@
+#ifndef __PROTOCOL_MTK_CLK_H__
+#define __PROTOCOL_MTK_CLK_H__
+//
+// Protocol interface structure
+//
+
+typedef struct _MTK_CLK MTK_CLK;
+
+enum MT6789_PLL {
+  MT6789_ARMPLL_L,
+  MT6789_ARMPLL_B,
+  MT6789_CCIPLL,
+  MT6789_MPLL,
+  MT6789_MAINPLL,
+  MT6789_UNIVPLL,
+  MT6789_MSDCPLL,
+  MT6789_MMPLL,
+  MT6789_NPUPLL,
+  MT6789_MFGPLL,
+  MT6789_TVDPLL,
+  MT6789_APLL1,
+  MT6789_APLL2,
+  MT6789_USBPLL,
+  // FAKE PLL
+  // Should be always last enum
+  MT6789_CLK26M,
+};
+
+enum MT6789_FACTORS {
+  MT6789_MSDCPLL_D2,
+  MT6789_TCK_26M_MX9,
+  MT6789_UNIVPLL_D6_D2,
+  MT6789_MAINPLL_D6_D2,
+  MT6789_MAINPLL_D7_D2,
+  MT6789_MAINPLL_D4_D4,
+  MT6789_MAINPLL_D4_D8,
+  MT6789_MAINPLL_D5_D2,
+  MT6789_UNIVPLL_D4_D4
+};
+
+enum MT6789_TOP_CLK {
+  MT6789_MSDC30_1,
+  MT6789_UFS_SEL
+};
+
+enum MT6789_INFRA_CLK {
+  MT6789_MSDC1,
+  MT6789_MSDC1_SRC,
+  MT6789_UNIPRO_SYSCLK,
+  MT6789_UFS_SAP_BCLK,
+  MT6789_UFS
+};
+
+//
+// Function Prototypes
+//
+
+typedef
+VOID
+(EFIAPI *MTK_CLK_GET_RATE)(
+  IN  UINT32 ClkId,
+  OUT UINT64 *Value
+  );
+
+typedef
+VOID
+(EFIAPI *MTK_CLK_SET_RATE)(
+  IN UINT32 ClkId,
+  IN UINT64 Freq
+  );
+
+typedef
+VOID
+(EFIAPI *MTK_CLK_STA)(
+  IN  UINT32   ClkId,
+  OUT BOOLEAN *Status
+  );
+
+typedef
+VOID
+(EFIAPI *MTK_CLK_CTRL)(
+  IN UINT32  ClkId,
+  IN BOOLEAN Ctrl
+  );
+
+struct _MTK_CLK {
+  MTK_CLK_GET_RATE  PllGetRate;
+  MTK_CLK_SET_RATE  PllSetRate;
+  MTK_CLK_STA       TopClkStatus;
+  MTK_CLK_CTRL      TopClkControl;
+  MTK_CLK_GET_RATE  TopClkGetRate;
+  MTK_CLK_STA       InfraClkStatus;
+  MTK_CLK_CTRL      InfraClkControl;
+};
+
+extern EFI_GUID gMediaTekClockProtocolGuid;
+
+#endif // __PROTOCOL_MTK_CLK_H__
