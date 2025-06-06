@@ -5,18 +5,18 @@
 
 #include <Protocol/MtkGpio.h>
 
-#define PIN_SG_OFFSET(p) ((p/32)*0x10) /* Offset for Set|Get values */
+/* Offset for Set|Get values */
+#define PIN_SG_OFFSET(P)   ((P / 32) * 0x10)
+#define PIN_MODE_OFFSET(P) ((P / 8) * 0x10)
+#define PIN_MODE_BIT(P)    ((Pin > 8) ? (Pin % 8) * 4 : Pin * 4)
 
-// Internal functions
 VOID
 GpioWrite (
   IN UINT32    Reg,
   IN UINT32    Value
   )
 {
-  UINT32 GpioAddr = PlatformInfo.BaseAddr + Reg;
-
-  MmioWrite32(GpioAddr, Value);
+  MmioWrite32(PlatformInfo.BaseAddr + Reg, Value);
 }
 
 VOID
@@ -25,154 +25,238 @@ GpioRead (
   OUT UINT32   *Value
   )
 {
-  UINT32 GpioAddr = PlatformInfo.BaseAddr + Reg;
-
-  *Value = MmioRead32(GpioAddr);
+  *Value = MmioRead32(PlatformInfo.BaseAddr + Reg);
 }
 
 VOID
-GetMode (
-  IN  UINT32          Pin,
-  OUT MTK_GPIO_MODE  *Mode
+GpioSetMode (
+	UINT32        Pin,
+	MTK_GPIO_MODE Mode
   )
 {
-  UINT32 Reg, PinMask, DirValue;
+	UINT32 Offset = PlatformInfo.ModeOffset + PIN_MODE_OFFSET (Pin);
+	UINT32 Bit = PIN_MODE_BIT (Pin);
+	UINT32 ModeNum = (UINT32) Mode;
+  UINT32 DataSet, DataReset;
 
-  PinMask = 1U << (Pin % 32);
-  Reg = PlatformInfo.DirOffset + PIN_SG_OFFSET(Pin);
+	GpioRead (Offset + PlatformInfo.SetOffset, &DataSet);
+	GpioRead (Offset + PlatformInfo.ResetOffset, &DataReset);
 
-  GpioRead(Reg, &DirValue);
+	for (UINT8 i = 0; i < 3; i++) {
+		if (ModeNum & (1 << i)) {
+			DataSet |= (1U << (Bit + i));
+		} else {
+			DataReset |= (1U << (Bit + i));
+		}
+	}
 
-  if (DirValue & PinMask)
-  {
-    *Mode = GPIO_MODE_OUTPUT;
-  }
-  else
-  {
-    *Mode = GPIO_MODE_INPUT;
+	GpioWrite (Offset + PlatformInfo.SetOffset, DataSet);
+	GpioWrite (Offset + PlatformInfo.ResetOffset, DataReset);
+}
+
+VOID
+GpioSetDir (
+	UINT32        Pin,
+	BOOLEAN       Direction
+  )
+{
+  UINT32 Offset, GpioReg;
+
+	Offset = PlatformInfo.DirOffset + PIN_SG_OFFSET (Pin);
+
+	if (Direction) {
+		Offset += PlatformInfo.SetOffset;
+	} else {
+		Offset += PlatformInfo.ResetOffset;
+	}
+
+  GpioRead (Offset, &GpioReg);
+	GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
+}
+
+VOID
+GpioGetDir (
+	UINT32   Pin,
+  BOOLEAN *Direction
+  )
+{
+  UINT32 Offset, GpioReg;
+
+	Offset = PlatformInfo.DataInOffset + PIN_SG_OFFSET (Pin);
+
+  GpioRead (Offset, &GpioReg);
+  *Direction = (GpioReg & (1 << (Pin % 32))) ? 0 : 1;
+}
+
+VOID
+GpioGetOut (
+	UINT32 Pin,
+  BOOLEAN *Status
+  )
+{
+  UINT32 Offset, GpioReg;
+
+	Offset = PlatformInfo.DataOutOffset + PIN_SG_OFFSET (Pin);
+
+  GpioRead (Offset, &GpioReg);
+	*Status = GpioReg & (1 << (Pin % 32));
+}
+
+VOID
+GpioGetIn (
+	UINT32   Pin,
+  BOOLEAN *Status
+  )
+{
+	UINT32 Offset, GpioReg;
+
+  Offset = PlatformInfo.DataInOffset + PIN_SG_OFFSET (Pin);
+
+  GpioRead (Offset, &GpioReg);
+	*Status = GpioReg & (1 << (Pin % 32));
+}
+
+VOID
+GpioSet (
+	UINT32     Pin,
+	BOOLEAN    Status
+  )
+{
+	UINT32 Offset, GpioReg;
+
+  Offset = PlatformInfo.DataOutOffset + PIN_SG_OFFSET (Pin);
+
+	if (Status) {
+		Offset += PlatformInfo.SetOffset;
+	} else {
+		Offset += PlatformInfo.ResetOffset;
+	}
+
+  GpioRead (Offset, &GpioReg);
+
+	GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
+}
+
+VOID GpioGet (
+  UINT32    Pin,
+  BOOLEAN  *Status
+  )
+{
+  BOOLEAN Direction;
+
+  GpioGetDir (Pin, &Direction);
+
+  if (Direction) {
+    GpioGetIn (Pin, Status);
+  } else {
+    GpioGetOut (Pin, Status);
   }
 }
 
 VOID
-Get (
-  IN  UINT32         Pin,
-  OUT BOOLEAN       *Value
+GpioSetDrv (
+  UINT32 Pin,
+  UINT32 Drv
   )
 {
-  UINT32 PinMask, Reg, BankValue, Dir, Mode;
+  struct MTK_GPIO_DRV_TABLE PinInfo;
+  UINT32 Reg;
 
-  Dir = PlatformInfo.DataOutOffset;
-
-  GetMode(Pin, &Mode);
-
-  if (Mode == GPIO_MODE_INPUT)
-  {
-    Dir = PlatformInfo.DataInOffset;
-  }
-
-  PinMask = 1U << (Pin % 32);
-  Reg = Dir + PIN_SG_OFFSET(Pin);
-  
-  GpioRead(Reg, &BankValue);
-
-  if (BankValue & PinMask)
-  {
-    *Value = 0;
-  }
-  else
-  {
-    *Value = 1;
-  }
-}
-
-VOID
-Set (
-  IN UINT32         Pin,
-  IN MTK_GPIO_MODE  Mode
-  )
-{
-  if (Mode < 8)
-  {
-    UINT32 Reg, ModeBit, DataSet, DataReset;
-
-    Reg = PlatformInfo.ModeOffset + ((Pin / 8) * 0x010);
-    ModeBit = Pin > 8 ? (Pin % 8) * 4 : Pin * 4;
-
-    GpioRead(Reg + PlatformInfo.SetOffset, &DataSet);
-    GpioRead(Reg + PlatformInfo.ResetOffset, &DataReset);
-
-    for (int i = 0; i < 3; i++)
-    {
-      if (Mode & (1 << i))
-      {
-        DataSet |= (1U << (ModeBit + i));
-      }
-      else
-      {
-        DataReset |= (1U << (ModeBit + i));
-      }
+  for (UINT32 i = 0; i <= PlatformInfo.MaxPin; i++) {
+    if (DrvTable[i].Pin == Pin) {
+      PinInfo = DrvTable[i];
+      break;
     }
-
-    GpioWrite(Reg + PlatformInfo.SetOffset, DataSet);
-    GpioWrite(Reg + PlatformInfo.ResetOffset, DataReset);
   }
-  else
-  {
-    UINT32 PinMask, Reg, BankValue;
 
-    PinMask = 1U << (Pin % 32);
-    Reg = PlatformInfo.DirOffset + PIN_SG_OFFSET(Pin);
-
-    if (Mode == GPIO_MODE_INPUT)
-    {
-      Reg += PlatformInfo.ResetOffset;
-    }
-    if (Mode == GPIO_MODE_OUTPUT)
-    {
-      Reg += PlatformInfo.SetOffset;
-    }
-
-    GpioRead(Reg, &BankValue);
-
-    BankValue |= PinMask;
-
-    GpioWrite(Reg, BankValue);
-  }
+  Reg = MmioRead32 (PinInfo.Base);
+  Reg &= ~(PinInfo.Mask << PinInfo.Shift);
+  Reg |= (Drv << PinInfo.Shift);
+  MmioWrite32 (PinInfo.Base, Reg);
 }
 
 VOID
-SetPull (
-  IN UINT32         Pin,
-  IN MTK_GPIO_PULL  State
+GpioSetR0 (
+  UINT32 Pin
   )
 {
-  UINT32 PinMask, Reg, BankValue;
+  struct MTK_GPIO_R_TABLE PinInfo;
+  UINT32 Reg;
 
-  PinMask = 1U << (Pin % 32);
-  Reg = PlatformInfo.DataOutOffset + PIN_SG_OFFSET(Pin);
-
-  if (State == GPIO_PULL_DOWN)
-  {
-    Reg += PlatformInfo.ResetOffset;
+  for (UINT32 i = 0; i <= PlatformInfo.MaxPin; i++) {
+    if (RTable[i].Pin == Pin) {
+      PinInfo = RTable[i];
+      break;
+    }
   }
-  if (State == GPIO_PULL_UP)
-  {
-    Reg += PlatformInfo.SetOffset;
-  }
-
-  GpioRead(Reg, &BankValue);
-
-  BankValue |= PinMask;
-
-  GpioWrite(Reg, BankValue);
+  // SET R0
+  Reg = MmioRead32 (PinInfo.R0Base);
+  Reg |= (1 << PinInfo.R0Shift);
+  MmioWrite32 (PinInfo.R0Base, Reg);
+  // CLR R1
+  Reg = MmioRead32 (PinInfo.R1Base);
+  Reg &= ~(1 << PinInfo.R1Shift);
+  MmioWrite32 (PinInfo.R1Base, Reg);
 }
 
+VOID
+GpioSetR1 (
+  UINT32 Pin
+  )
+{
+  struct MTK_GPIO_R_TABLE PinInfo;
+  UINT32 Reg;
+
+  for (UINT32 i = 0; i <= PlatformInfo.MaxPin; i++) {
+    if (RTable[i].Pin == Pin) {
+      PinInfo = RTable[i];
+      break;
+    }
+  }
+  // CLR R0
+  Reg = MmioRead32 (PinInfo.R0Base);
+  Reg &= ~(1 << PinInfo.R0Shift);
+  MmioWrite32 (PinInfo.R0Base, Reg);
+  // SET R1
+  Reg = MmioRead32 (PinInfo.R1Base);
+  Reg |= (1 << PinInfo.R1Shift);
+  MmioWrite32 (PinInfo.R1Base, Reg);
+}
+
+VOID
+GpioSetPupd (
+  UINT32  Pin,
+  BOOLEAN IsPullDown
+  )
+{
+  struct MTK_GPIO_PUPD_TABLE PinInfo;
+  UINT32 Reg;
+
+  for (UINT32 i = 0; i <= PlatformInfo.MaxPin; i++) {
+    if (PupdTable[i].Pin == Pin) {
+      PinInfo = PupdTable[i];
+      break;
+    }
+  }
+
+  Reg = MmioRead32 (PinInfo.Base);
+  if (IsPullDown)
+    Reg |= (1 << PinInfo.Shift);
+  else
+    Reg &= ~(1 << PinInfo.Shift);
+  MmioWrite32 (PinInfo.Base, Reg);
+}
 
 MTK_GPIO MtkGpio = {
-  Get,
-  Set,
-  GetMode,
-  SetPull,
+  GpioGet,
+  GpioSet,
+  GpioGetDir,
+  GpioSetDir,
+  GpioSetMode,
+  GpioSetDrv,
+  GpioSetR0,
+  GpioSetR1,
+  GpioSetPupd
 };
 
 EFI_STATUS

@@ -20,6 +20,11 @@ typedef enum {
   GPIO_MODE_SPECIAL_FUNCTION_7 = 7
 } MTK_GPIO_MODE;
 
+typedef enum {
+  MTK_GPIO_PULL_UP,
+  MTK_GPIO_PULL_DOWN
+} MTK_GPIO_PULL;
+
 typedef struct {
   UINT32 BaseAddr;
   UINT32 SetOffset;
@@ -28,13 +33,29 @@ typedef struct {
   UINT32 DataOutOffset;
   UINT32 DataInOffset;
   UINT32 ModeOffset;
+  UINT32 MaxPin;
 } MTK_GPIO_PLATFORM_INFO;
 
-typedef enum {
-  GPIO_PULL_NONE,
-  GPIO_PULL_UP,
-  GPIO_PULL_DOWN
-} MTK_GPIO_PULL;
+struct MTK_GPIO_DRV_TABLE {
+  UINT32 Pin;
+  UINT32 Base;
+  UINT32 Mask;
+  UINT32 Shift; 
+};
+
+struct MTK_GPIO_R_TABLE {
+  UINT32 Pin; 
+  UINT32 R0Base;
+  UINT32 R1Base;
+  UINT32 R0Shift; 
+  UINT32 R1Shift;
+};
+
+struct MTK_GPIO_PUPD_TABLE {
+  UINT32 Pin;
+  UINT32 Base;
+  UINT32 Shift;
+};
 
 //
 // Function Prototypes
@@ -43,7 +64,7 @@ typedef
 VOID
 (EFIAPI *MTK_GPIO_GET)(
   IN  UINT32         Pin,
-  OUT BOOLEAN       *Value
+  OUT BOOLEAN       *Status
   );
 
 /*++
@@ -54,16 +75,16 @@ Routine Description:
 
 Arguments:
 
-  Pin   - which pin to read
-  Value - state of the pin
+  Pin    - which pin to read
+  Status - pointer to output state of the pin
 
 --*/
 
 typedef
 VOID
 (EFIAPI *MTK_GPIO_SET)(
-  IN UINT32         Pin,
-  IN MTK_GPIO_MODE Mode
+  IN UINT32        Pin,
+  IN BOOLEAN       Status
   );
 
 /*++
@@ -74,56 +95,101 @@ Routine Description:
 
 Arguments:
 
-  Pin   - which pin to modify
-  Mode  - mode to set
+  Pin     - which pin to modify
+  Status  - state of the pin
 
 --*/
 
 typedef
 VOID
-(EFIAPI *MTK_GPIO_GET_MODE)(
-  IN  UINT32            Pin,
-  OUT MTK_GPIO_MODE    *Mode
+(EFIAPI *MTK_GPIO_GET_DIR)(
+  IN  UINT32          Pin,
+  OUT BOOLEAN        *Direction
   );
 
 /*++
 
 Routine Description:
 
-  Gets the mode (function) of a GPIO pin
+  Gets the direction of a GPIO pin
 
 Arguments:
 
-  Pin   - which pin
-  Mode  - pointer to output mode value
+  Pin        - which pin
+  Direction  - pointer to output mode value (FALSE: Output, TRUE: Input)
 
 --*/
 
 typedef
 VOID
-(EFIAPI *MTK_GPIO_SET_PULL)(
+(EFIAPI *MTK_GPIO_SET_DIR)(
   IN  UINT32         Pin,
-  IN  MTK_GPIO_PULL Direction
+  IN  BOOLEAN        Direction
   );
 
 /*++
 
 Routine Description:
 
-  Sets the pull-up / pull-down resistor of a GPIO pin
+  Sets the direction of a GPIO pin
 
 Arguments:
 
-  Pin   - which pin
-  Direction - pull-up, pull-down, or none
+  Pin       - which pin
+  Direction - FALSE: Output, TRUE: Input
 
 --*/
+
+typedef
+VOID
+(EFIAPI *MTK_GPIO_SET_MODE)(
+  IN  UINT32         Pin,
+  IN  MTK_GPIO_MODE  Mode
+  );
+
+/*++
+
+Routine Description:
+
+  Sets the mode of a GPIO pin
+
+Arguments:
+
+  Pin       - which pin
+  Func      - which function
+
+--*/
+
+typedef
+VOID
+(EFIAPI *MTK_GPIO_SET_DRV)(
+  UINT32 Pin,
+  UINT32 Drv
+  );
+
+typedef
+VOID
+(EFIAPI *MTK_GPIO_SET_R)(
+  UINT32 Pin
+  );
+
+typedef
+VOID
+(EFIAPI *MTK_GPIO_SET_PUPD)(
+  UINT32  Pin,
+  BOOLEAN IsPullDown
+  );
 
 struct _MTK_GPIO {
   MTK_GPIO_GET              Get;
   MTK_GPIO_SET              Set;
-  MTK_GPIO_GET_MODE         GetMode;
-  MTK_GPIO_SET_PULL         SetPull;
+  MTK_GPIO_GET_DIR          GetDir;
+  MTK_GPIO_SET_DIR          SetDir;
+  MTK_GPIO_SET_MODE         SetMode;
+  MTK_GPIO_SET_DRV          SetDrv;
+  MTK_GPIO_SET_R            SetR0;
+  MTK_GPIO_SET_R            SetR1;
+  MTK_GPIO_SET_PUPD         SetPupd;
 };
 
 extern EFI_GUID  gMtkGpioProtocolGuid;
