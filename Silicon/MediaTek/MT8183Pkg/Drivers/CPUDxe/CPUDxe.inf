@@ -1,0 +1,28 @@
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = CpuDxe
+  FILE_GUID                      = B266AA7C-D846-4B3F-BFD0-74FB35F0E630
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = CpuDxeInitialize
+
+[Sources.common]
+  CPUDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MediaTekPkg/MediaTekPkg.dec
+  MT8183Pkg/MT8183.dec
+
+[LibraryClasses]
+  IoLib
+  DebugLib
+  TimerLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gMediaTekMT6358PmicProtocolGuid
+  gMediaTekClockProtocolGuid
+
+[Depex]
+  gMediaTekMT6358PmicProtocolGuid AND gMediaTekClockProtocolGuid

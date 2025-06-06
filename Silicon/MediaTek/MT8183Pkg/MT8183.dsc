@@ -46,6 +46,8 @@
   RealTimeClockLib|MediaTekPkg/Library/MT6358RtcLib/MT6358RtcLib.inf
 
 [Components.common]
+  MT8183Pkg/Drivers/ClockDxe/ClockDxe.inf
+  MT8183Pkg/Drivers/CPUDxe/CPUDxe.inf
   MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {

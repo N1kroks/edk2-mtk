@@ -29,6 +29,8 @@ APRIORI DXE {
   INF MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   INF MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
   INF MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
+  INF MT8183Pkg/Drivers/ClockDxe/ClockDxe.inf
+  INF MT8183Pkg/Drivers/CPUDxe/CPUDxe.inf
 
   INF EmbeddedPkg/EmbeddedMonotonicCounter/EmbeddedMonotonicCounter.inf
   INF MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf

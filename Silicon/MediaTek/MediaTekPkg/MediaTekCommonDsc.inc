@@ -102,9 +102,6 @@
   ## 0-PCANSI, 1-VT100, 2-VT00+, 3-UTF8, 4-TTYTERM
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
 
-  # Boot Manager
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|3
-
   # PCI Express
   gEfiMdeModulePkgTokenSpaceGuid.PcdSrIovSupport|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdAriSupport|FALSE
