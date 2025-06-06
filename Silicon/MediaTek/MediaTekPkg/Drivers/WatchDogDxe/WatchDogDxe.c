@@ -4,7 +4,6 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/TimerLib.h>
-#include <Library/MemoryAllocationLib.h>
 
 #define WATCHDOG_BASE (0x10007000)
 #define WATCHDOG_LENGTH (0x4)
@@ -12,19 +11,28 @@
 
 #define WDT_LENGTH_KEY (0x8)
 #define WDT_RST_KEY (0x1971)
+#define WDT_MODE_KEY (0x22000000)
 
-typedef struct {
-  EFI_EVENT WatchdogTimerEvent;
-  EFI_EVENT mEfiExitBootServicesEvent;
-  UINT64 TimerPeriod;
-} WATCHDOG_TIMER_CONTEXT;
+EFI_EVENT mEfiExitBootServicesEvent;
 
-WATCHDOG_TIMER_CONTEXT *mTimerContext;
+UINT32 WatchdogModeBackup;
 
 VOID
 WatchdogPing ()
 {
   MmioWrite32 (WATCHDOG_BASE + WATCHDOG_RESTART, WDT_RST_KEY);
+}
+
+VOID
+WatchdogDisable ()
+{
+  MmioWrite32 (WATCHDOG_BASE, WDT_MODE_KEY);
+}
+
+VOID
+WatchdogEnable ()
+{
+  MmioWrite32 (WATCHDOG_BASE, WatchdogModeBackup | WDT_MODE_KEY);
 }
 
 VOID
@@ -38,14 +46,12 @@ SetTimeout (UINT32 TimeoutMicroSeconds)
 }
 
 VOID
-EFIAPI
-PingWatchdogEvent (
+WatchdogExitBootServicesEvent (
   IN EFI_EVENT Event,
   IN VOID *Context
   )
 {
-  DEBUG ((DEBUG_ERROR, "WatchDogDxe: WOOF WOOF\n"));
-  WatchdogPing ();
+  WatchdogEnable ();
 }
 
 EFI_STATUS
@@ -57,56 +63,26 @@ WatchdogDxeEntry (
 {
   EFI_STATUS Status;
 
+  WatchdogModeBackup = MmioRead32 (WATCHDOG_BASE);
+
+  WatchdogDisable ();
+
   // Set watchdog timeout to 30s
   SetTimeout (30*1000*1000);
 
-  mTimerContext = AllocateZeroPool (sizeof (WATCHDOG_TIMER_CONTEXT));
-  if (mTimerContext == NULL) {
-    DEBUG ((DEBUG_ERROR, "WatchDogDxe: Failed to allocate timer context\n"));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  // Ping watchdog every 5s
-  mTimerContext->TimerPeriod = 5*1000*1000;
-
+   // Enable watchdog before os boot
   Status = gBS->CreateEvent (
-    EVT_TIMER | EVT_NOTIFY_SIGNAL,
-    TPL_CALLBACK,
-    PingWatchdogEvent,
-    mTimerContext,
-    &mTimerContext->WatchdogTimerEvent
-  );
-
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "WatchDogDxe: Failed to create timer event: %r\n", Status));
-    return Status;
-  }
-
-  Status = gBS->SetTimer (
-    mTimerContext->WatchdogTimerEvent,
-    TimerPeriodic, // Periodic timer
-    mTimerContext->TimerPeriod
-  );
-
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "WatchDogDxe: Failed to set periodic timer: %r\n", Status));
-    return Status;
-  }
-
-  // Ping watchdog before os boot
-  /*Status = gBS->CreateEvent (
     EVT_SIGNAL_EXIT_BOOT_SERVICES,
     TPL_NOTIFY,
-    PingWatchdogEvent,
-    mTimerContext,
-    &mTimerContext->mEfiExitBootServicesEvent
+    WatchdogExitBootServicesEvent,
+    NULL,
+    &mEfiExitBootServicesEvent
   );
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "WatchDogDxe: Failed to create ExitBootServices event: %r\n", Status));
     return Status;
-  }*/
+  }
 
-  DEBUG ((DEBUG_INFO, "WatchDogDxe: Watchdog kicker initialized.\n"));
   return EFI_SUCCESS;
 }

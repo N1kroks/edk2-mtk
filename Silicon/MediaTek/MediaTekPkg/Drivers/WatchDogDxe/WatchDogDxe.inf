@@ -19,7 +19,6 @@
   IoLib
   TimerLib
   UefiLib
-  MemoryAllocationLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
