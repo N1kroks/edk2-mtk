@@ -61,8 +61,6 @@ ConfigureGpio ()
   for (Pin = 71; Pin != 76; Pin++)
   {
     MtkGpio->SetMode (Pin, GPIO_MODE_SPECIAL_FUNCTION_1);
-    MtkGpio->SetDrv (Pin, 3);
-    MtkGpio->SetR0 (Pin);
 
     if (Pin != 71) {
       MtkGpio->SetDir (Pin, MTK_GPIO_DIR_INPUT);
@@ -70,6 +68,9 @@ ConfigureGpio ()
     } else {
       MtkGpio->SetPupd (Pin, MTK_GPIO_PULL_DOWN);
     }
+
+    MtkGpio->SetDrv (Pin, 3);
+    MtkGpio->SetR0 (Pin);
   }
 }
 

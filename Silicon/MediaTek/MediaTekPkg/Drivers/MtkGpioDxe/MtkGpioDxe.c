@@ -30,59 +30,59 @@ GpioRead (
 
 VOID
 GpioSetMode (
-	UINT32        Pin,
-	MTK_GPIO_MODE Mode
+  UINT32        Pin,
+  MTK_GPIO_MODE Mode
   )
 {
-	UINT32 Offset = PlatformInfo.ModeOffset + PIN_MODE_OFFSET (Pin);
-	UINT32 Bit = PIN_MODE_BIT (Pin);
-	UINT32 ModeNum = (UINT32) Mode;
+  UINT32 Offset = PlatformInfo.ModeOffset + PIN_MODE_OFFSET (Pin);
+  UINT32 Bit = PIN_MODE_BIT (Pin);
+  UINT32 ModeNum = (UINT32) Mode;
   UINT32 DataSet, DataReset;
 
-	GpioRead (Offset + PlatformInfo.SetOffset, &DataSet);
-	GpioRead (Offset + PlatformInfo.ResetOffset, &DataReset);
+  GpioRead (Offset + PlatformInfo.SetOffset, &DataSet);
+  GpioRead (Offset + PlatformInfo.ResetOffset, &DataReset);
 
-	for (UINT8 i = 0; i < 3; i++) {
-		if (ModeNum & (1 << i)) {
-			DataSet |= (1U << (Bit + i));
-		} else {
-			DataReset |= (1U << (Bit + i));
-		}
-	}
+  for (UINT8 i = 0; i < 3; i++) {
+    if (ModeNum & (1 << i)) {
+      DataSet |= (1U << (Bit + i));
+    } else {
+      DataReset |= (1U << (Bit + i));
+    }
+  }
 
-	GpioWrite (Offset + PlatformInfo.SetOffset, DataSet);
-	GpioWrite (Offset + PlatformInfo.ResetOffset, DataReset);
+  GpioWrite (Offset + PlatformInfo.SetOffset, DataSet);
+  GpioWrite (Offset + PlatformInfo.ResetOffset, DataReset);
 }
 
 VOID
 GpioSetDir (
-	UINT32        Pin,
-	BOOLEAN       Direction
+  UINT32        Pin,
+  BOOLEAN       Direction
   )
 {
   UINT32 Offset, GpioReg;
 
-	Offset = PlatformInfo.DirOffset + PIN_SG_OFFSET (Pin);
+  Offset = PlatformInfo.DirOffset + PIN_SG_OFFSET (Pin);
 
-	if (Direction) {
-		Offset += PlatformInfo.SetOffset;
-	} else {
-		Offset += PlatformInfo.ResetOffset;
-	}
+  if (Direction) {
+    Offset += PlatformInfo.ResetOffset;
+  } else {
+    Offset += PlatformInfo.SetOffset;
+  }
 
   GpioRead (Offset, &GpioReg);
-	GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
+  GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
 }
 
 VOID
 GpioGetDir (
-	UINT32   Pin,
+  UINT32   Pin,
   BOOLEAN *Direction
   )
 {
   UINT32 Offset, GpioReg;
 
-	Offset = PlatformInfo.DataInOffset + PIN_SG_OFFSET (Pin);
+  Offset = PlatformInfo.DataInOffset + PIN_SG_OFFSET (Pin);
 
   GpioRead (Offset, &GpioReg);
   *Direction = (GpioReg & (1 << (Pin % 32))) ? 0 : 1;
@@ -90,51 +90,51 @@ GpioGetDir (
 
 VOID
 GpioGetOut (
-	UINT32 Pin,
+  UINT32 Pin,
   BOOLEAN *Status
   )
 {
   UINT32 Offset, GpioReg;
 
-	Offset = PlatformInfo.DataOutOffset + PIN_SG_OFFSET (Pin);
+  Offset = PlatformInfo.DataOutOffset + PIN_SG_OFFSET (Pin);
 
   GpioRead (Offset, &GpioReg);
-	*Status = GpioReg & (1 << (Pin % 32));
+  *Status = GpioReg & (1 << (Pin % 32));
 }
 
 VOID
 GpioGetIn (
-	UINT32   Pin,
+  UINT32   Pin,
   BOOLEAN *Status
   )
 {
-	UINT32 Offset, GpioReg;
+  UINT32 Offset, GpioReg;
 
   Offset = PlatformInfo.DataInOffset + PIN_SG_OFFSET (Pin);
 
   GpioRead (Offset, &GpioReg);
-	*Status = GpioReg & (1 << (Pin % 32));
+  *Status = GpioReg & (1 << (Pin % 32));
 }
 
 VOID
 GpioSet (
-	UINT32     Pin,
-	BOOLEAN    Status
+  UINT32     Pin,
+  BOOLEAN    Status
   )
 {
-	UINT32 Offset, GpioReg;
+  UINT32 Offset, GpioReg;
 
   Offset = PlatformInfo.DataOutOffset + PIN_SG_OFFSET (Pin);
 
-	if (Status) {
-		Offset += PlatformInfo.SetOffset;
-	} else {
-		Offset += PlatformInfo.ResetOffset;
-	}
+  if (Status) {
+    Offset += PlatformInfo.SetOffset;
+  } else {
+    Offset += PlatformInfo.ResetOffset;
+  }
 
   GpioRead (Offset, &GpioReg);
 
-	GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
+  GpioWrite (Offset, GpioReg | (1 << (Pin % 32)));
 }
 
 VOID GpioGet (

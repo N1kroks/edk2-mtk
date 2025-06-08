@@ -8,108 +8,6 @@ SD_INFO            *SdInfo;
 
 MSDC_PLATFORM *MsdcPlatform;
 
-VOID MsdcWrite (
-  IN UINT32 Offset,
-  IN UINT32 Value
-  )
-{
-  MmioWrite32 (PlatformInfo.MsdcMmioReg + Offset, Value);
-}
-
-VOID MsdcRead (
-  IN  UINT32  Offset,
-  OUT UINT32 *Value
-)
-{
-  *Value = MmioRead32 (PlatformInfo.MsdcMmioReg + Offset);
-}
-
-VOID MsdcTopWrite (
-  IN UINT32 Offset,
-  IN UINT32 Value
-  )
-{
-  MmioWrite32 (PlatformInfo.TopMmioReg + Offset, Value);
-}
-
-VOID MsdcTopRead (
-  IN  UINT32  Offset,
-  OUT UINT32 *Value
-)
-{
-  *Value = MmioRead32 (PlatformInfo.TopMmioReg + Offset);
-}
-
-VOID MsdcSetBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask
-)
-{
-  UINT32 Reg;
-  MsdcRead (Offset, &Reg);
-  Reg |= BitMask;
-  MsdcWrite (Offset, Reg);
-}
-
-VOID MsdcClrSetBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask,
-  IN UINT32 BitMaskSet
-)
-{
-  UINT32 Reg;
-  MsdcRead (Offset, &Reg);
-  Reg &= ~BitMask;
-  Reg |= BitMaskSet;
-  MsdcWrite (Offset, Reg);
-}
-
-VOID MsdcClrBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask
-)
-{
-  UINT32 Reg;
-  MsdcRead (Offset, &Reg);
-  Reg &= ~BitMask;
-  MsdcWrite (Offset, Reg);
-}
-
-VOID MsdcTopSetBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask
-)
-{
-  UINT32 Reg;
-  MsdcTopRead (Offset, &Reg);
-  Reg |= BitMask;
-  MsdcTopWrite (Offset, Reg);
-}
-
-VOID MsdcTopClrSetBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask,
-  IN UINT32 BitMaskSet
-)
-{
-  UINT32 Reg;
-  MsdcTopRead (Offset, &Reg);
-  Reg &= ~BitMask;
-  Reg |= BitMaskSet;
-  MsdcTopWrite (Offset, Reg);
-}
-
-VOID MsdcTopClrBits (
-  IN UINT32 Offset,
-  IN UINT32 BitMask
-)
-{
-  UINT32 Reg;
-  MsdcTopRead (Offset, &Reg);
-  Reg &= ~BitMask;
-  MsdcTopWrite (Offset, Reg);
-}
-
 VOID MsdcReset ()
 {
   UINT32 Reg;
@@ -187,7 +85,7 @@ VOID MsdcSetBusWidth (UINT32 Width)
 
 VOID MsdcSetMclk (UINT32 Hz)
 {
-  UINT64 SourceClock;
+  UINTN SourceClock;
   UINT32 Div, Mode;
   MsdcPlatform->GetSourceClockRate (&SourceClock);
   
@@ -471,7 +369,7 @@ MsdcPioWrite (
       MsdcWrite (MSDC_INT, IntStatus & MSDC_INT_XFER_COMPL);
 
       if (RemainSize) {
-        DEBUG ((DEBUG_ERROR, "MsdcDxe: Data not fully read :( \n"));
+        DEBUG ((DEBUG_ERROR, "MsdcDxe: Data not fully wrote :( \n"));
         return EFI_ABORTED;
       }
 
@@ -528,10 +426,10 @@ MsdcSendCmd (
         break;
       case SdMmcResponseTypeR5b:
         DEBUG ((DEBUG_INFO, "MsdcDxe: Response type R5b is NOT supported!\n"));
-        ASSERT (FALSE);
+        return EFI_ABORTED;
       default:
         DEBUG ((DEBUG_INFO, "MsdcDxe: What the fuck r u want to get? 0x%x\n", CommandBlk->ResponseType));
-        ASSERT (FALSE);
+        return EFI_ABORTED;
     }
     RawCmd |= RspType << SDC_CMD_RSP_TYPE_SHIFT;
   }
@@ -1325,7 +1223,8 @@ SdCardIdentification ()
 EFI_STATUS EFIAPI MsdcDxeInitialize (
   IN EFI_HANDLE ImageHandle,
   IN EFI_SYSTEM_TABLE *SystemTable
-) {
+  )
+{
   EFI_STATUS Status;
 
   Status = gBS->LocateProtocol (&gMediaTekMsdcPlatformProtocolGuid, NULL, (VOID **)&MsdcPlatform);

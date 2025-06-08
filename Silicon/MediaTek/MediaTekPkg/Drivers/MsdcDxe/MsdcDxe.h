@@ -198,4 +198,56 @@ typedef struct {
   UINT64 Capacity;
 } SD_INFO;
 
+VOID MsdcWrite (
+  IN UINT32 Offset,
+  IN UINT32 Value
+  );
+
+VOID MsdcRead (
+  IN  UINT32  Offset,
+  OUT UINT32 *Value
+  );
+
+VOID MsdcTopWrite (
+  IN UINT32 Offset,
+  IN UINT32 Value
+  );
+
+VOID MsdcTopRead (
+  IN  UINT32  Offset,
+  OUT UINT32 *Value
+  );
+
+VOID MsdcSetBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask
+  );
+
+VOID MsdcClrSetBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask,
+  IN UINT32 BitMaskSet
+  );
+
+VOID MsdcClrBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask
+  );
+
+VOID MsdcTopSetBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask
+  );
+
+VOID MsdcTopClrSetBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask,
+  IN UINT32 BitMaskSet
+  );
+
+VOID MsdcTopClrBits (
+  IN UINT32 Offset,
+  IN UINT32 BitMask
+  );
+
 #endif // _MSDC_DXE_H_
