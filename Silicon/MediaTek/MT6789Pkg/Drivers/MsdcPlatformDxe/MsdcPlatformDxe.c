@@ -54,13 +54,13 @@ ConfigureGpio ()
    * GPIO73-76: DAT0-3
    */
   UINT8 Pin;
-  for (Pin = 71; Pin != 76; Pin++)
+  for (Pin = 71; Pin <= 76; Pin++)
   {
     MtkGpio->SetMode (Pin, GPIO_MODE_SPECIAL_FUNCTION_1);
 
-    if (Pin != 71) {
+    /*if (Pin != 71) {
       MtkGpio->SetDir (Pin, MTK_GPIO_DIR_INPUT);
-    }
+    }*/
 
     MtkGpio->SetDrv (Pin, 3);
     MtkGpio->SetR0 (Pin);
@@ -142,8 +142,5 @@ MsdcPlatformDxeEntry (
   }
 
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Okeeey \n"));
-
-  MicroSecondDelay (3*1000*1000);
-
   return Status;
 }

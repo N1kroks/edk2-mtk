@@ -26,6 +26,8 @@ APRIORI DXE {
 
   INF MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
 
+  INF MediaTekPkg/Drivers/WatchDogDxe/WatchDogDxe.inf
+
   INF MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   INF MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
   INF MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
