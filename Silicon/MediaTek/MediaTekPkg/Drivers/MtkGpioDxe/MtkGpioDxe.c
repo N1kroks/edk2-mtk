@@ -8,7 +8,7 @@
 /* Offset for Set|Get values */
 #define PIN_SG_OFFSET(P)   ((P / 32) * 0x10)
 #define PIN_MODE_OFFSET(P) ((P / 8) * 0x10)
-#define PIN_MODE_BIT(P)    ((Pin > 8) ? (Pin % 8) * 4 : Pin * 4)
+#define PIN_MODE_BIT(P)    ((P > 8) ? (P % 8) * 4 : P * 4)
 
 VOID
 GpioWrite (

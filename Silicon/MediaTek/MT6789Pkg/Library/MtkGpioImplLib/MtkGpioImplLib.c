@@ -43,9 +43,9 @@ struct MTK_GPIO_R_TABLE RTable[] = {
 
 struct MTK_GPIO_PUPD_TABLE PupdTable[] = {
   { .Pin = 71, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
-  { .Pin = 72, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
-  { .Pin = 73, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
-  { .Pin = 74, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
-  { .Pin = 75, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
-  { .Pin = 76, .Base = IOCFG_RT_BASE+0xb0, .Shift = 0 },
+  { .Pin = 72, .Base = IOCFG_RT_BASE+0xb0, .Shift = 1 },
+  { .Pin = 73, .Base = IOCFG_RT_BASE+0xb0, .Shift = 2 },
+  { .Pin = 74, .Base = IOCFG_RT_BASE+0xb0, .Shift = 3 },
+  { .Pin = 75, .Base = IOCFG_RT_BASE+0xb0, .Shift = 4 },
+  { .Pin = 76, .Base = IOCFG_RT_BASE+0xb0, .Shift = 5 },
 };

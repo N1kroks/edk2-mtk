@@ -20,14 +20,12 @@ GetSourceClockRate (
 {
   MtkClk->TopClkGetRate (MT6789_MSDC30_1, Hz);
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Source clock rate: %llu \n", *Hz));
-  MicroSecondDelay (1*1000*1000);
 }
 
 VOID
 DisableSourceClock ()
 {
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Disable source clock!\n"));
-  MicroSecondDelay (1*1000*1000);
   MtkClk->InfraClkControl (MT6789_MSDC1_SRC, FALSE);
 }
 
@@ -35,7 +33,6 @@ VOID
 EnableSourceClock ()
 {
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Enable source clock!\n"));
-  MicroSecondDelay (1*1000*1000);
   MtkClk->InfraClkControl (MT6789_MSDC1_SRC, TRUE);
 }
 
@@ -43,7 +40,6 @@ VOID
 EnableClocks ()
 {
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Enable clocks!\n"));
-  MicroSecondDelay (1*1000*1000);
   MtkClk->TopClkControl (MT6789_MSDC30_1, TRUE);
   MtkClk->InfraClkControl (MT6789_MSDC1, TRUE);
   MtkClk->InfraClkControl (MT6789_MSDC1_SRC, TRUE);
@@ -53,8 +49,8 @@ VOID
 ConfigureGpio ()
 {
   /* MT6789 MSDC1 Gpios:
-   * GPIO71: CLK
-   * GPIO72: CMD
+   * GPIO71:    CLK
+   * GPIO72:    CMD
    * GPIO73-76: DAT0-3
    */
   UINT8 Pin;
@@ -64,13 +60,16 @@ ConfigureGpio ()
 
     if (Pin != 71) {
       MtkGpio->SetDir (Pin, MTK_GPIO_DIR_INPUT);
-      MtkGpio->SetPupd (Pin, MTK_GPIO_PULL_UP);
-    } else {
-      MtkGpio->SetPupd (Pin, MTK_GPIO_PULL_DOWN);
     }
 
     MtkGpio->SetDrv (Pin, 3);
     MtkGpio->SetR0 (Pin);
+
+    if (Pin == 71) {
+      MtkGpio->SetPupd (Pin, MTK_GPIO_PULL_DOWN);
+    } else {
+      MtkGpio->SetPupd (Pin, MTK_GPIO_PULL_UP);
+    }
   }
 }
 
@@ -80,7 +79,6 @@ PowerControl (
   )
 {
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Power control: %d \n", Enable));
-  MicroSecondDelay (1*1000*1000);
   MtkPmic->LdoControl (MT6358_LDO_VMCH, Enable);
   MtkPmic->LdoControl (MT6358_LDO_VMC,  Enable);
 }
@@ -90,7 +88,7 @@ PlatformInitialization ()
 {
   // Set voltage
   MtkPmic->LdoSetVoltage (MT6358_LDO_VMCH, 3300);
-  MtkPmic->LdoSetVoltage (MT6358_LDO_VMC, 3300);
+  MtkPmic->LdoSetVoltage (MT6358_LDO_VMC,  3300);
   // Configure GPIO
   ConfigureGpio ();
 }
@@ -112,26 +110,22 @@ MsdcPlatformDxeEntry (
 {
   EFI_STATUS Status;
   DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Hi\n"));
-  MicroSecondDelay (1*1000*1000);
 
   Status = gBS->LocateProtocol (&gMtkGpioProtocolGuid, NULL, (VOID **)&MtkGpio);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Failed to locate gpio protocol, Status = %r\n", Status));
-    MicroSecondDelay (1*1000*1000);
     return Status;
   }
 
   Status = gBS->LocateProtocol (&gMediaTekMT6358PmicProtocolGuid, NULL, (VOID **)&MtkPmic);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Failed to locate pmic protocol, Status = %r\n", Status));
-    MicroSecondDelay (1*1000*1000);
     return Status;
   }
 
   Status = gBS->LocateProtocol (&gMediaTekClockProtocolGuid, NULL, (VOID **)&MtkClk);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Failed to locate clock protocol, Status = %r\n", Status));
-    MicroSecondDelay (1*1000*1000);
     return Status;
   }
 
@@ -144,9 +138,12 @@ MsdcPlatformDxeEntry (
     NULL);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Failed to install protocol, Status = %r\n", Status));
-    MicroSecondDelay (1*1000*1000);
     return Status;
   }
+
+  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Okeeey \n"));
+
+  MicroSecondDelay (3*1000*1000);
 
   return Status;
 }
