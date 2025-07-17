@@ -195,7 +195,7 @@ typedef struct {
 } MSDC_HOST_DATA;
 
 typedef struct {
-  UINT64 Capacity;
+  UINT32 Lba;
 } SD_INFO;
 
 VOID MsdcWrite (

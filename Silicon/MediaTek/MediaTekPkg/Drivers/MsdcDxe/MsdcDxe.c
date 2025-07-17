@@ -1,4 +1,6 @@
 #include "MsdcDxe.h"
+#include <Protocol/BlockIo.h>
+#include <Protocol/DevicePath.h>
 
 #define BLOCK_SIZE      512
 
@@ -7,6 +9,48 @@ MSDC_HOST_DATA     *HostData;
 SD_INFO            *SdInfo;
 
 MSDC_PLATFORM *MsdcPlatform;
+
+EFI_BLOCK_IO_MEDIA gSDMMCMedia = {
+  SIGNATURE_32('m','s','d','c'),            // MediaId
+  FALSE,                                    // RemovableMedia
+  TRUE,                                     // MediaPresent
+  FALSE,                                    // LogicalPartition
+  FALSE,                                    // ReadOnly
+  FALSE,                                    // WriteCaching
+  512,                                      // BlockSize
+  4,                                        // IoAlign
+  0,                                        // Pad
+  0                                         // LastBlock
+};
+
+
+typedef struct {
+  VENDOR_DEVICE_PATH  Mmc;
+  EFI_DEVICE_PATH     End;
+} MSDC_DEVICE_PATH;
+
+MSDC_DEVICE_PATH gMSDCDevicePath = {
+  {  // Mmc (VENDOR_DEVICE_PATH)
+    {  // Header
+      HARDWARE_DEVICE_PATH,      // Type
+      HW_VENDOR_DP,              // SubType
+      {                          // Length (UINT8 array style)
+        (UINT8)(sizeof(VENDOR_DEVICE_PATH)),
+        (UINT8)((sizeof(VENDOR_DEVICE_PATH)) >> 8)
+      }
+    },
+    // Vendor GUID
+    { 0xb615f1f5, 0x5088, 0x43cd, { 0x80, 0x9c, 0xa1, 0x6e, 0x52, 0x48, 0x7d, 0x00 } }
+  },
+  {  // End (EFI_DEVICE_PATH)
+    END_DEVICE_PATH_TYPE,        // Type
+    END_ENTIRE_DEVICE_PATH_SUBTYPE,  // SubType
+    {                            // Length (UINT8 array style)
+      sizeof(EFI_DEVICE_PATH_PROTOCOL),
+      0
+    }
+  }
+};
 
 VOID MsdcReset ()
 {
@@ -307,8 +351,20 @@ MsdcPioRead (
   BOOLEAN IsXferDone;
   UINT32 IntStatus, ChunkSize, RemainSize, RxBytes;
   UINT8 *ByteBuffer = (UINT8 *)Buffer;
+  UINT32 TmoClks = 3;
 
   RemainSize = BufferLength;
+
+  //DEBUG ((DEBUG_INFO, "MsdcDxe: Reading PIO with size %d    \n", BufferLength));
+
+  /*if (BufferLength > 1) {
+    TmoClks = BufferLength / 512;
+    if (TmoClks > 64) {
+      TmoClks = 64;
+    }
+  }
+  HostData->TimeoutClks = TmoClks * (1 << SCLK_CYCLES_SHIFT);
+  MsdcSetTimeout ();*/
 
   MsdcClrBits (MSDC_INTEN, MSDC_INT_DATSTS);
 
@@ -319,9 +375,14 @@ MsdcPioRead (
       return MsdcIntTrackError (MSDC_INT_DATSTS, IntStatus);
     }
 
-    ChunkSize = RemainSize > MSDC_FIFO_SIZE ? MSDC_FIFO_SIZE : RemainSize;
 
+    ChunkSize = RemainSize > MSDC_FIFO_SIZE ? MSDC_FIFO_SIZE : RemainSize;
     MsdcFifoRxBytes (&RxBytes);
+
+    if (RemainSize == 0 && RxBytes) {
+      ASSERT (FALSE);
+    }
+    
     if (RxBytes >= ChunkSize) {
       MsdcFifoRead (ByteBuffer, ChunkSize);
       ByteBuffer += ChunkSize;
@@ -490,14 +551,22 @@ MsdcSendCmd (
   // Disable generating interrupts, cuz we use polling way
   MsdcClrBits (MSDC_INTEN, MSDC_INT_CMDSTS);
   
-  DEBUG ((DEBUG_INFO, "MsdcDxe: Sending CMD with OpCode: %d\n", CommandBlk->CommandIndex));
-  DEBUG ((DEBUG_INFO, "MsdcDxe: CMD Arguments: 0x%x\n", CommandBlk->CommandArgument));
-  DEBUG ((DEBUG_INFO, "MsdcDxe: MSDC Command: 0x%x\n", RawCmd));
+  if (IsDataTransfer) {
+    //DEBUG ((DEBUG_INFO, "MsdcDxe: Sending CMD with OpCode: %d\n", CommandBlk->CommandIndex));
+    //DEBUG ((DEBUG_INFO, "MsdcDxe: CMD Arguments: 0x%x\n", CommandBlk->CommandArgument));
+    //DEBUG ((DEBUG_INFO, "MsdcDxe: MSDC Command: 0x%x\n", RawCmd));
+  }
 
   MsdcWrite (SDC_ARG, CommandBlk->CommandArgument);
   MsdcWrite (SDC_CMD, RawCmd);
 
+  if (IsDataTransfer) {
+    //DEBUG ((DEBUG_INFO, "MsdcDxe: Command sent!\n"));
+  }
   Status = MsdcPollInterrupts (MSDC_INT_CMDSTS, MSDC_INT_CMDRDY);
+  if (IsDataTransfer) {
+    //DEBUG ((DEBUG_INFO, "MsdcDxe: Command done!\n"));
+  }
   if (EFI_ERROR(Status)) {
     return Status;
   }
@@ -1197,6 +1266,9 @@ SdCardIdentification ()
     return Status;
   }
 
+  SD_CSD2 *Csd2 = (SD_CSD2 *)&Csd;
+  gSDMMCMedia.LastBlock = (Csd2->CSizeLow | (Csd.CSizeHigh << 16)) - 1;
+
   Status = SdCardSelect (Rca);
   if (EFI_ERROR (Status)) {
     DEBUG ((
@@ -1220,6 +1292,157 @@ SdCardIdentification ()
   return Status;
 }
 
+EFI_STATUS
+EFIAPI
+MSDCFlushBlocks (
+  IN EFI_BLOCK_IO_PROTOCOL  *This
+  )
+{
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+MSDCWriteBlocks (
+  IN EFI_BLOCK_IO_PROTOCOL          *This,
+  IN UINT32                         MediaId,
+  IN EFI_LBA                        Lba,
+  IN UINTN                          BufferSize,
+  IN VOID                           *Buffer
+  )
+{
+  return EFI_WRITE_PROTECTED;
+}
+
+EFI_STATUS
+MsdcReadSingleBlock (
+  EFI_LBA Lba,
+  UINTN BufferSize,
+  VOID *Buffer
+  )
+{
+  EFI_SD_MMC_COMMAND_BLOCK             SdMmcCmdBlk;
+  EFI_SD_MMC_STATUS_BLOCK              SdMmcStatusBlk;
+  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET  Packet;
+  EFI_STATUS                           Status;
+
+  ZeroMem (&SdMmcCmdBlk, sizeof (SdMmcCmdBlk));
+  ZeroMem (&SdMmcStatusBlk, sizeof (SdMmcStatusBlk));
+  ZeroMem (&Packet, sizeof (Packet));
+
+  Packet.SdMmcCmdBlk    = &SdMmcCmdBlk;
+  Packet.SdMmcStatusBlk = &SdMmcStatusBlk;
+
+  SdMmcCmdBlk.CommandIndex    = SD_READ_SINGLE_BLOCK;
+  SdMmcCmdBlk.CommandType     = SdMmcCommandTypeAdtc;
+  SdMmcCmdBlk.ResponseType    = SdMmcResponseTypeR1;
+  SdMmcCmdBlk.CommandArgument = Lba;
+
+  Packet.OutDataBuffer     = Buffer;
+  Packet.OutTransferLength = (UINT32)BufferSize;
+
+  return MsdcSendCmd (&Packet);
+}
+
+EFI_STATUS
+MsdcReadSingleMultipleBlock (
+  EFI_LBA Lba,
+  UINTN BufferSize,
+  VOID *Buffer
+  )
+{
+  EFI_STATUS Status;
+  UINTN BlockSize = 512;
+  UINTN BlockNum = BufferSize / BlockSize;
+  UINTN RemainingSize = BufferSize % BlockSize;
+  UINT8 *BufferPtr = Buffer;
+  
+  for (UINTN i = 0; i < BlockNum; i++) {
+    Status = MsdcReadSingleBlock (Lba + i, BlockSize, BufferPtr);
+    if (EFI_ERROR(Status)) {
+      return Status;
+    }
+    BufferPtr += BlockSize;
+  }
+  
+  if (RemainingSize > 0) {
+    Status = MsdcReadSingleBlock (Lba + BlockNum, RemainingSize, BufferPtr);
+    if (EFI_ERROR(Status)) {
+      return Status;
+    }
+  }
+  
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+MsdcReadMultipleBlock (
+  EFI_LBA Lba,
+  UINTN BufferSize,
+  VOID *Buffer
+  )
+{
+  return MsdcReadSingleMultipleBlock (Lba, BufferSize, Buffer);
+  EFI_SD_MMC_COMMAND_BLOCK             SdMmcCmdBlk;
+  EFI_SD_MMC_STATUS_BLOCK              SdMmcStatusBlk;
+  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET  Packet;
+  EFI_STATUS                           Status;
+
+  ZeroMem (&SdMmcCmdBlk, sizeof (SdMmcCmdBlk));
+  ZeroMem (&SdMmcStatusBlk, sizeof (SdMmcStatusBlk));
+  ZeroMem (&Packet, sizeof (Packet));
+
+  Packet.SdMmcCmdBlk    = &SdMmcCmdBlk;
+  Packet.SdMmcStatusBlk = &SdMmcStatusBlk;
+
+  SdMmcCmdBlk.CommandIndex    = SD_READ_MULTIPLE_BLOCK;
+  SdMmcCmdBlk.CommandType     = SdMmcCommandTypeAdtc;
+  SdMmcCmdBlk.ResponseType    = SdMmcResponseTypeR1;
+  SdMmcCmdBlk.CommandArgument = Lba;
+
+  Packet.OutDataBuffer     = Buffer;
+  Packet.OutTransferLength = (UINT32)BufferSize;
+
+  return MsdcSendCmd (&Packet);
+}
+
+EFI_STATUS
+EFIAPI
+MSDCReadBlocks (
+  IN EFI_BLOCK_IO_PROTOCOL          *This,
+  IN UINT32                         MediaId,
+  IN EFI_LBA                        Lba,
+  IN UINTN                          BufferSize,
+  OUT VOID                          *Buffer
+  )
+{
+  UINTN BlockNum = BufferSize / 512;
+  //DEBUG ((DEBUG_INFO, "MsdcDxe: Read lba %d blocks %d    \n", Lba, BlockNum));
+  if ( BlockNum == 1 ) {
+    return MsdcReadSingleBlock (Lba, BufferSize, Buffer);
+  } 
+  return MsdcReadMultipleBlock (Lba, BufferSize, Buffer);
+}
+
+EFI_STATUS
+EFIAPI
+MSDCReset (
+  IN EFI_BLOCK_IO_PROTOCOL          *This,
+  IN BOOLEAN                        ExtendedVerification
+  )
+{
+  return EFI_SUCCESS;
+}
+
+EFI_BLOCK_IO_PROTOCOL gBlockIo = {
+  EFI_BLOCK_IO_INTERFACE_REVISION,   // Revision
+  &gSDMMCMedia,                      // *Media
+  MSDCReset,                        // Reset
+  MSDCReadBlocks,                   // ReadBlocks
+  MSDCWriteBlocks,                  // WriteBlocks
+  MSDCFlushBlocks                   // FlushBlocks
+};
+
 EFI_STATUS EFIAPI MsdcDxeInitialize (
   IN EFI_HANDLE ImageHandle,
   IN EFI_SYSTEM_TABLE *SystemTable
@@ -1239,7 +1462,12 @@ EFI_STATUS EFIAPI MsdcDxeInitialize (
   MsdcInit ();
   SdCardIdentification ();
 
-  MicroSecondDelay (10*1000*1000);
+  Status = gBS->InstallMultipleProtocolInterfaces (
+                &ImageHandle,
+                &gEfiBlockIoProtocolGuid,    &gBlockIo,
+                &gEfiDevicePathProtocolGuid, &gMSDCDevicePath,
+                NULL
+                );
 
   return Status;
 }
