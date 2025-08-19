@@ -1,0 +1,3 @@
+Dummy Ramdisk to satisfy bootloader check:
+
+[7992] panic (caller 0x56024c93): ASSERT at (platform/common/boot/boot_info.c:105): g_boot_info.bootimg_ramdisk_sz != 0
