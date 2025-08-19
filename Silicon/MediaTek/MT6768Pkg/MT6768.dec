@@ -1,0 +1,11 @@
+[Defines]
+  DEC_SPECIFICATION              = 0x0001001A
+  PACKAGE_NAME                   = MT6768Pkg
+  PACKAGE_GUID                   = f0bb4e4e-a070-4966-874c-0a3ca020e483
+  PACKAGE_VERSION                = 1.0
+
+[Includes]
+  Include
+
+[Guids]
+  gMT6768PkgTokenSpaceGuid        = { 0x4e4ebbf0, 0x70a0, 0x6649, {0x87, 0x4c, 0x0a, 0x3c, 0xa0, 0x20, 0xe4, 0x83 } }
