@@ -33,6 +33,7 @@
 #include <Protocol/MsdcPlatform.h>
 
 #include <IndustryStandard/Sd.h>
+#include <IndustryStandard/Emmc.h>
 
 //
 // Constants
@@ -152,6 +153,7 @@
 #define SDC_CMD_MULTIPLE_BLK    (BIT12)
 #define SDC_CMD_RW              (BIT13)
 #define SDC_CMD_STOP_CMD        (BIT14)
+#define SDC_CMD_AUTO12          (BIT28)
 #define SDC_CMD_BLK_SIZE_SHIFT  (16)
 
 /* SDC_STS */
@@ -187,6 +189,11 @@
 // Structures
 //
 
+#define MSDC_PRIVATE_SIGNATURE SIGNATURE_32 ('M', 'S', 'D', 'C')
+
+#define MSDC_PRIVATE_FROM_THIS(a) \
+    CR(a, MSDC_PRIVATE_DATA, PassThru, MSDC_PRIVATE_SIGNATURE)
+
 typedef struct {
   UINT32 BlkSize;
   UINT32 Sclk;
@@ -194,58 +201,129 @@ typedef struct {
   UINT32 TimeoutClks;
 } MSDC_HOST_DATA;
 
+typedef enum {
+  UnknownCard,
+  EmmcCard,
+  SdCard
+} SD_MCC_CARD_TYPE;
+
 typedef struct {
   UINT32 Lba;
+  SD_MCC_CARD_TYPE CardType;
 } SD_INFO;
 
+typedef struct {
+  UINT32 Signature;
+
+  EFI_HANDLE                    ControllerHandle;
+  EFI_SD_MMC_PASS_THRU_PROTOCOL PassThru;
+
+  UINT32 Index;
+
+  MSDC_HOST_INFO *HostInfo;
+  MSDC_HOST_DATA  HostData;
+  SD_INFO         SdInfo;
+} MSDC_PRIVATE_DATA;
+
+typedef
+EFI_STATUS
+(*CARD_DETECT_ROUTINE) (
+  IN MSDC_PRIVATE_DATA *Private
+  );
+
+EFI_STATUS MsdcPassThru (
+  EFI_SD_MMC_PASS_THRU_PROTOCOL *This,
+  UINT8 Slot,
+  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET *Packet,
+  EFI_EVENT Event
+  );
+
+EFI_STATUS MsdcGetNextSlot (
+  EFI_SD_MMC_PASS_THRU_PROTOCOL *This,
+  UINT8 *Slot
+  );
+
+EFI_STATUS MsdcBuildDevicePath (
+  EFI_SD_MMC_PASS_THRU_PROTOCOL *This,
+  UINT8 Slot,
+  EFI_DEVICE_PATH_PROTOCOL **DevicePath
+  );
+
+EFI_STATUS MsdcGetSlotNumber (
+  EFI_SD_MMC_PASS_THRU_PROTOCOL *This,
+  EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+  UINT8 *Slot
+  );
+
+EFI_STATUS MsdcResetDevice (
+  EFI_SD_MMC_PASS_THRU_PROTOCOL *This,
+  UINT8 Slot
+  );
+
+EFI_STATUS
+MsdcSendCmd (
+  MSDC_PRIVATE_DATA* Private,
+  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET *Packet
+  );
+
 VOID MsdcWrite (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 Value
   );
 
 VOID MsdcRead (
+  IN MSDC_PRIVATE_DATA *Private,
   IN  UINT32  Offset,
   OUT UINT32 *Value
   );
 
 VOID MsdcTopWrite (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 Value
   );
 
 VOID MsdcTopRead (
+  IN MSDC_PRIVATE_DATA *Private,
   IN  UINT32  Offset,
   OUT UINT32 *Value
   );
 
 VOID MsdcSetBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask
   );
 
 VOID MsdcClrSetBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask,
   IN UINT32 BitMaskSet
   );
 
 VOID MsdcClrBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask
   );
 
 VOID MsdcTopSetBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask
   );
 
 VOID MsdcTopClrSetBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask,
   IN UINT32 BitMaskSet
   );
 
 VOID MsdcTopClrBits (
+  IN MSDC_PRIVATE_DATA *Private,
   IN UINT32 Offset,
   IN UINT32 BitMask
   );

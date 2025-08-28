@@ -428,6 +428,8 @@
 
   # MSDC
   MediaTekPkg/Drivers/MsdcDxe/MsdcDxe.inf
+  MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
   # PMIC
   MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf

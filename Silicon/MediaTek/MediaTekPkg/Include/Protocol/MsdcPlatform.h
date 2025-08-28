@@ -13,28 +13,23 @@ typedef struct _MSDC_PLATFORM MSDC_PLATFORM;
 typedef
 VOID
 (EFIAPI *MSDC_PLATFORM_CALLBACK)(
-  VOID
+  UINT32 Index,
+  BOOLEAN Enable
   );
 
 typedef
 VOID
 (EFIAPI *MSDC_PLATFORM_GET_CLOCK_RATE)(
+  UINT32 Index,
   UINTN *Hz
-  );
-
-typedef
-VOID
-(EFIAPI *MSDC_PLATFORM_POWER_CALLBACK)(
-  BOOLEAN Enable
   );
 
 
 struct _MSDC_PLATFORM {
   MSDC_PLATFORM_GET_CLOCK_RATE GetSourceClockRate;
-  MSDC_PLATFORM_CALLBACK       DisableSourceClock;
-  MSDC_PLATFORM_CALLBACK       EnableSourceClock;
-  MSDC_PLATFORM_CALLBACK       EnableClocks;
-  MSDC_PLATFORM_POWER_CALLBACK PowerControl;
+  MSDC_PLATFORM_CALLBACK       SourceClockControl;
+  MSDC_PLATFORM_CALLBACK       ClocksControl;
+  MSDC_PLATFORM_CALLBACK       PowerControl;
 };
 
 extern EFI_GUID gMediaTekMsdcPlatformProtocolGuid;

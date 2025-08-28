@@ -28,8 +28,6 @@
 [Protocols]
   gEfiSdMmcPassThruProtocolGuid
   gMediaTekMsdcPlatformProtocolGuid
-  gEfiBlockIoProtocolGuid
-  gEfiDevicePathProtocolGuid
 
 [Depex]
   gMediaTekMsdcPlatformProtocolGuid

@@ -15,31 +15,31 @@ MTK_GPIO           *MtkGpio;
 
 VOID
 GetSourceClockRate (
+  UINT32 Index,
   UINTN *Hz
 )
 {
   MtkClk->TopClkGetRate (MT6789_MSDC30_1, Hz);
-  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Source clock rate: %llu \n", *Hz));
+  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Source clock rate: %llu, index: %d\n", *Hz, Index));
 }
 
 VOID
-DisableSourceClock ()
+SourceClockControl (
+  UINT32 Index,
+  BOOLEAN Enable
+  )
 {
-  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Disable source clock!\n"));
-  MtkClk->InfraClkControl (MT6789_MSDC1_SRC, FALSE);
+  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Control source clock index: %d, enable %d!\n", Index, Enable));
+  MtkClk->InfraClkControl (MT6789_MSDC1_SRC, Enable);
 }
 
 VOID
-EnableSourceClock ()
+ClocksControl (
+  UINT32 Index,
+  BOOLEAN Enable
+  )
 {
-  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Enable source clock!\n"));
-  MtkClk->InfraClkControl (MT6789_MSDC1_SRC, TRUE);
-}
-
-VOID
-EnableClocks ()
-{
-  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Enable clocks!\n"));
+  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Control clocks index: %d, enable %d!\n", Index, Enable));
   MtkClk->TopClkControl (MT6789_MSDC30_1, TRUE);
   MtkClk->InfraClkControl (MT6789_MSDC1, TRUE);
   MtkClk->InfraClkControl (MT6789_MSDC1_SRC, TRUE);
@@ -75,10 +75,11 @@ ConfigureGpio ()
 
 VOID
 PowerControl (
+  UINT32 Index,
   BOOLEAN Enable
   )
 {
-  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Power control: %d \n", Enable));
+  DEBUG ((DEBUG_ERROR, "MsdcPlatformDxe: Power control index: %d, enable %d\n", Index, Enable));
   MtkPmic->LdoControl (MT6358_LDO_VMCH, Enable);
   MtkPmic->LdoControl (MT6358_LDO_VMC,  Enable);
 }
@@ -95,9 +96,8 @@ PlatformInitialization ()
 
 MSDC_PLATFORM MsdcPlatform = {
   GetSourceClockRate,
-  DisableSourceClock,
-  EnableSourceClock,
-  EnableClocks,
+  SourceClockControl,
+  ClocksControl,
   PowerControl
 };
 

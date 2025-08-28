@@ -135,6 +135,12 @@ READ_LOCK_STATUS   = TRUE
   INF MT6789Pkg/Drivers/MsdcPlatformDxe/MsdcPlatformDxe.inf
 
   #
+  # SD/eMMC Support
+  #
+  INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+
+  #
   # USB Host Support
   #
   INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf

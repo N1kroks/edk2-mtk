@@ -46,6 +46,8 @@ APRIORI DXE {
   INF MediaTekPkg/Drivers/RamDiskDxe/RamDiskDxe.inf
 
   INF MediaTekPkg/Drivers/MsdcDxe/MsdcDxe.inf
+  INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
   INF MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 
