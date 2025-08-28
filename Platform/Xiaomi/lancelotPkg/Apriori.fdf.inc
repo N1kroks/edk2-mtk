@@ -29,6 +29,8 @@ APRIORI DXE {
   INF MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   INF MediaTekPkg/Drivers/PmicWrapperDxe/PmicWrapperDxe.inf
   INF MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
+  INF MT6768Pkg/Drivers/ClockDxe/ClockDxe.inf
+  INF MT6768Pkg/Drivers/MsdcPlatformDxe/MsdcPlatformDxe.inf
 
   INF EmbeddedPkg/EmbeddedMonotonicCounter/EmbeddedMonotonicCounter.inf
   INF MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
@@ -40,6 +42,10 @@ APRIORI DXE {
   INF MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   INF MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
   INF MediaTekPkg/Drivers/RamDiskDxe/RamDiskDxe.inf
+
+  INF MediaTekPkg/Drivers/MsdcDxe/MsdcDxe.inf
+  INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
   INF MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 

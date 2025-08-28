@@ -1,0 +1,30 @@
+[Defines]
+  INF_VERSION                    = 1.25
+  BASE_NAME                      = MsdcPlatformDxe
+  FILE_GUID                      = 056CF78C-8156-4F12-AE3D-A59A80F65818
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MsdcPlatformDxeEntry
+
+[Sources.common]
+  MsdcPlatformDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MediaTekPkg/MediaTekPkg.dec
+  MT6768Pkg/MT6768.dec
+
+[LibraryClasses]
+  IoLib
+  DebugLib
+  TimerLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gMediaTekMsdcPlatformProtocolGuid
+  gMediaTekMT6358PmicProtocolGuid
+  gMediaTekClockProtocolGuid
+  gMtkGpioProtocolGuid
+
+[Depex]
+  gMediaTekMsdcPlatformProtocolGuid AND gMediaTekClockProtocolGuid

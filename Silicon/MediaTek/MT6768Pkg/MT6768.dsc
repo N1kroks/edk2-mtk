@@ -42,9 +42,12 @@
   PlatformPeiLib|MT6768Pkg/Library/PlatformPeiLib/PlatformPeiLib.inf
   PlatformPrePiLib|MT6768Pkg/Library/PlatformPrePiLib/PlatformPrePiLib.inf
   MtkGpioImplLib|MT6768Pkg/Library/MtkGpioImplLib/MtkGpioImplLib.inf
+  MsdcPlatformImplLib|MT6768Pkg/Library/MsdcPlatformImplLib/MsdcPlatformImplLib.inf
   PmicWrapperImplLib|MT6768Pkg/Library/PmicWrapperImplLib/PmicWrapperImplLib.inf
 
 [Components.common]
+  MT6768Pkg/Drivers/ClockDxe/ClockDxe.inf
+  MT6768Pkg/Drivers/MsdcPlatformDxe/MsdcPlatformDxe.inf
   MediaTekPkg/Drivers/MtkGpioDxe/MtkGpioDxe.inf
   MediaTekPkg/Drivers/MT6358PmicDxe/MT6358PmicDxe.inf
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {

@@ -1,0 +1,15 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MsdcPlatformImplLib
+  FILE_GUID                      = DE5AD5A8-BD88-49F1-8DC4-7D756E00F261
+  MODULE_TYPE                    = SEC
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MsdcPlatformImplLib
+
+[Sources]
+  MsdcPlatformImplLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MediaTekPkg/MediaTekPkg.dec
+  MT6768Pkg/MT6768.dec
